@@ -23,7 +23,10 @@ var playerx = 500
 var playery = 100
 var stars
 var bombs
+var pain
 var hit
+var why
+var hitPain
 var gg
 var platforms
 var cursors
@@ -36,6 +39,7 @@ function preload ()
 {
     this.load.image('back', 'assets/back.png');
     this.load.image('floor', 'assets/death1.png');
+    this.load.image('pain', 'assets/pain.png');
     this.load.image('star', 'assets/goal.png');
     this.load.image('bomb', 'assets/gg.png');
     this.load.spritesheet('dude', 'assets/mm.png', { frameWidth: 56, frameHeight: 54 });
@@ -93,12 +97,14 @@ function create ()
     });
 
     bombs = this.physics.add.group();
+    pain = this.physics.add.staticGroup();
     scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#7d378f' });
     
 
     this.physics.add.collider(bombs, platforms);
-    
-    this.physics.add.overlap(stars, player, collectStar, null, this);
+    hitPain = this.physics.add.collider(player,pain);
+    this.physics.add.collider(bombs,pain);
+    why = this.physics.add.overlap(stars, player, collectStar, null, this);
     this.physics.add.collider(player, floor, hitFloor, null, this);
     hit = this.physics.add.collider(player, bombs, hitBomb, null, this);
 
@@ -114,11 +120,15 @@ function update ()
     {
         player.alpha = 0;
         hit.active = false;
+        hitPain.active = false;
+        why.active = false;
     }
     else 
     {
         player.alpha = 1;
-        hit.active = true; 
+        hit.active = true;
+        hitPain.active = true;
+        why.active = true; 
     }
     if (cursors.left.isDown)
     {
@@ -165,7 +175,6 @@ function collectStar (player, star)
 
     score += 1000;
     scoreText.setText('Score: ' + score);
-
     if (stars.countActive(true) === 0)
     {
         stars.children.iterate(function (child) {
@@ -178,7 +187,9 @@ function collectStar (player, star)
         var bomb = bombs.create(x, Math.random() * 400, 'bomb');
         bomb.setBounce(1);
         bomb.setCollideWorldBounds(true);
-        bomb.setVelocity(Math.random() * 431 + 20);
+        bomb.setVelocity(Math.random() * 500 + 100);
+
+        pain.create(Math.random() * 700 + 50, Math.random() * 500 + 50, 'pain')
 
     }
 }
