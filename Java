@@ -2,7 +2,7 @@
 
 var config = {
     type: Phaser.AUTO,
-    width: 800,
+    width: 1200,
     height: 600,
     physics: {
         default: 'arcade',
@@ -30,15 +30,16 @@ var hitPain
 var gg
 var platforms
 var cursors
-var score = 0;
+var score = 1;
 var gameOver = false;
 var scoreText;
 var game = new Phaser.Game(config);
 
 function preload ()
 {
-    this.load.image('back', 'assets/back.png');
-    this.load.image('floor', 'assets/death1.png');
+    this.load.image('back', 'assets/back2.png');
+    this.load.image('floor1', 'assets/death1.png');
+    this.load.image('floor2', 'assets/death2.png')
     this.load.image('pain', 'assets/pain.png');
     this.load.image('star', 'assets/goal.png');
     this.load.image('bomb', 'assets/gg.png');
@@ -47,19 +48,18 @@ function preload ()
 
 function create ()
 {
-    this.add.image(400, 300, 'back');
+    this.add.image(600, 300, 'back');
 
    
-    floor = this.physics.add.staticGroup();
-    floor.create(400, 605, 'floor');
-    floor.create(400, -6, 'floor');
-    floor.create(-4785, 300, 'floor').setScale(12).refreshBody();
-    floor.create(5588, 300, 'floor').setScale(12).refreshBody();
-
+    floor1 = this.physics.add.staticGroup();
+    floor2 = this.physics.add.staticGroup();
+    floor1.create(600, 20, 'floor1');
+    floor1.create(600, 580, 'floor1');
+    floor2.create(20, 300, 'floor2');
+    floor2.create(1180, 300, 'floor2');
 
     
     player = this.physics.add.sprite(playerx, playery, 'dude');
-
 
     
     player.setCollideWorldBounds(true);
@@ -74,10 +74,9 @@ function create ()
     this.anims.create({
         key: 'dead',
         frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 4 }),
-        frameRate:50,
+        frameRate:30,
         repeat: -1
     });
-
 
     
     cursors = this.input.keyboard.createCursorKeys();
@@ -95,17 +94,16 @@ function create ()
         repeat: 0,
         setXY: { x: 400, y: 300,}
     });
-
     bombs = this.physics.add.group();
     pain = this.physics.add.staticGroup();
-    scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#7d378f' });
-    
-
-    this.physics.add.collider(bombs, platforms);
+    scoreText = this.add.text(600, 50, 'score: 0', { fontSize: '32px', fill: '#7d378f' });
+    this.physics.add.collider(bombs, floor1);
+    this.physics.add.collider(bombs, floor2);
     hitPain = this.physics.add.collider(player,pain);
     this.physics.add.collider(bombs,pain);
     why = this.physics.add.overlap(stars, player, collectStar, null, this);
-    this.physics.add.collider(player, floor, hitFloor, null, this);
+    this.physics.add.collider(player, floor1, hitFloor, null, this);
+    this.physics.add.collider(player, floor2, hitFloor, null, this);
     hit = this.physics.add.collider(player, bombs, hitBomb, null, this);
 
 }
@@ -168,32 +166,44 @@ function update ()
         player.anims. play('right', true)
     }
 }
-
 function collectStar (player, star)
 {
     star.disableBody(true, true);
-
     score += 1000;
     scoreText.setText('Score: ' + score);
     if (stars.countActive(true) === 0)
     {
         stars.children.iterate(function (child) {
 
-            child.enableBody(true, Math.random() * 700 + 50, Math.random() * 500 + 50, true, true);
+            child.enableBody(true, Math.random() * 1100 + 50, Math.random() * 500 + 50, true, true);
 
         });
-        var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+        var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 0);
 
         var bomb = bombs.create(x, Math.random() * 400, 'bomb');
         bomb.setBounce(1);
         bomb.setCollideWorldBounds(true);
-        bomb.setVelocity(Math.random() * 500 + 100);
+        if (bomb.x > player.x)
+        {
+            bomb.setVelocityX(-360)
+        }
+        else if (bomb.x < player.x)
+        {
+            bomb.setVelocityX(360)
+        }
+        if (bomb.y > player.y)
+        {
+            bomb.setVelocityY(-360)
+        }
+        else if (bomb.x < player.x)
+        {
+            bomb.setVelocityY(360)
+        }
+        
 
-        pain.create(Math.random() * 700 + 50, Math.random() * 500 + 50, 'pain')
-
+        pain.create(Math.random() * 1100 + 50, Math.random() * 500 + 50, 'pain')
     }
 }
-
 function hitFloor (player, floor)
 {
     this.physics.pause();
@@ -202,7 +212,6 @@ function hitFloor (player, floor)
     player.setTint(0x0000FF);
     gameOver = true;
 }
-
 function hitBomb (player, bomb)
 {
     this.physics.pause();
